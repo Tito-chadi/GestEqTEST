@@ -1,5 +1,167 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model GestionnaireFootball.Models.Match
+
 @{
+    ViewData["Title"] = "Modifier le match";
+}
+
+<h2><i class="bi bi-pencil-square"></i> Modifier le match</h2>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group mb-3">
+                <label asp-for="DateHeure" class="control-label"></label>
+                <input asp-for="DateHeure" class="form-control" />
+                <span asp-validation-for="DateHeure" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Adversaire" class="control-label"></label>
+                <input asp-for="Adversaire" class="form-control" />
+                <span asp-validation-for="Adversaire" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Lieu" class="control-label"></label>
+                <input asp-for="Lieu" class="form-control" />
+                <span asp-validation-for="Lieu" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="EstDomicile" class="control-label">Type de match</label>
+                <select asp-for="EstDomicile" class="form-control">
+                    <option value="">-- Sélectionner --</option>
+                    <option value="true">🏠 Domicile</option>
+                    <option value="false">🚗 Extérieur</option>
+                </select>
+                <span asp-validation-for="EstDomicile" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="ButsPour" class="control-label">Buts pour nous</label>
+                        <input asp-for="ButsPour" class="form-control" type="number" min="0" />
+                        <span asp-validation-for="ButsPour" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="ButsContre" class="control-label">Buts contre</label>
+                        <input asp-for="ButsContre" class="form-control" type="number" min="0" />
+                        <span asp-validation-for="ButsContre" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Score" class="control-label">Score (optionnel)</label>
+                <input asp-for="Score" class="form-control" />
+                <span asp-validation-for="Score" class="text-danger"></span>
+            </div>
+
+            <div class="alert alert-info mb-3">
+                <i class="bi bi-info-circle"></i>
+                <strong>Statistiques associées :</strong>
+                @if (Model.Presences?.Any() == true)
+                {
+                    <span>@Model.Presences.Count présences enregistrées</span>
+                }
+                @if (Model.Compositions?.Any() == true)
+                {
+                    <span> - @Model.Compositions.Count composition(s)</span>
+                }
+            </div>
+
+            <div class="form-group mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Enregistrer les modifications
+                </button>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info">
+                    <i class="bi bi-eye"></i> Voir les détails
+                </a>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Retour au calendrier
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-calendar-event"></i> Résumé du match</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-5">Adversaire :</dt>
+                    <dd class="col-sm-7">@Model.Adversaire</dd>
+
+                    <dt class="col-sm-5">Date :</dt>
+                    <dd class="col-sm-7">@Model.DateHeure.ToString("dddd dd MMMM yyyy")</dd>
+
+                    <dt class="col-sm-5">Heure :</dt>
+                    <dd class="col-sm-7">@Model.DateHeure.ToString("HH:mm")</dd>
+
+                    <dt class="col-sm-5">Lieu :</dt>
+                    <dd class="col-sm-7">@Model.Lieu</dd>
+
+                    <dt class="col-sm-5">Type :</dt>
+                    <dd class="col-sm-7">
+                        @if (Model.EstDomicile == true)
+                        {
+                            <span class="badge bg-primary">🏠 Domicile</span>
+                        }
+                        else if (Model.EstDomicile == false)
+                        {
+                            <span class="badge bg-warning">🚗 Extérieur</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Non défini</span>
+                        }
+                    </dd>
+
+                    @if (Model.ButsPour.HasValue && Model.ButsContre.HasValue)
+                    {
+                        <dt class="col-sm-5">Résultat :</dt>
+                        <dd class="col-sm-7">
+                            <span class="fw-bold">@Model.ButsPour - @Model.ButsContre</span>
+                            <span class="badge @(Model.Resultat == "Victoire" ? "bg-success" :
+                                                                                 Model.Resultat == "Défaite" ? "bg-danger" :
+                                                                                 Model.Resultat == "Nul" ? "bg-warning" : "bg-secondary") ms-2">
+                            @Model.Resultat
+                        </span>
+                    </dd>
+                                        }
+                </dl>
+
+                @if (Model.Compositions?.Any() == true)
+                {
+                    <div class="mt-3">
+                        <h6><i class="bi bi-diagram-3"></i> Compositions associées :</h6>
+                        <ul class="list-group list-group-flush">
+                            @foreach (var comp in Model.Compositions.Take(3))
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    @comp.Nom
+                                    <span class="badge bg-info">@comp.Formation</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

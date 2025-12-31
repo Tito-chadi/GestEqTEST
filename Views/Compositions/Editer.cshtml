@@ -1,5 +1,165 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model GestionnaireFootball.Models.Composition
+
 @{
+    ViewData["Title"] = "Éditer la composition";
+    var joueursDisponibles = ViewBag.JoueursDisponibles as List<GestionnaireFootball.Models.Joueur>;
 }
+
+<h2>@Model.Nom - Formation @Model.Formation</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Terrain de football visuel -->
+        <div class="football-field" style="position: relative; height: 500px; background-color: #4CAF50; border: 2px solid white; border-radius: 10px;">
+            @foreach (var poste in Model.PostesTerrain.OrderBy(p => p.PositionY))
+            {
+                <div class="player-position"
+                     style="position: absolute;
+                                left: @(poste.PositionX)%;
+                                top: @(poste.PositionY)%;
+                                transform: translate(-50%, -50%);
+                                width: 60px;
+                                text-align: center;">
+
+                    <div class="position-circle"
+                         style="width: 50px;
+                                    height: 50px;
+                                    background-color: @(poste.JoueurId.HasValue ? "#2196F3" : "#cccccc");
+                                    border-radius: 50%;
+                                    margin: 0 auto;
+                                    cursor: pointer;"
+                         data-poste-id="@poste.Id"
+                         data-bs-toggle="modal"
+                         data-bs-target="#assignModal-@poste.Id">
+
+                        @if (poste.JoueurId.HasValue)
+                        {
+                            <span style="color: white; font-weight: bold; line-height: 50px; font-size: 12px;">
+                                @poste.Joueur?.Nom?.Substring(0, Math.Min(2, poste.Joueur.Nom.Length))
+                            </span>
+                        }
+                        else
+                        {
+                            <span style="color: #666; line-height: 50px; font-size: 20px;">+</span>
+                        }
+                    </div>
+                    <small class="text-white d-block mt-1">@poste.NomPoste</small>
+
+                    <!-- Modal pour assigner un joueur -->
+                    <div class="modal fade" id="assignModal-@poste.Id" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Assigner un joueur : @poste.NomPoste</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form method="post" asp-action="AssignerJoueur">
+                                        <input type="hidden" name="compositionId" value="@Model.Id" />
+                                        <input type="hidden" name="posteTerrainId" value="@poste.Id" />
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Sélectionner un joueur</label>
+                                            <select name="joueurId" class="form-select">
+                                                <option value="">-- Libérer le poste --</option>
+                                                @if (joueursDisponibles != null)
+                                                {
+                                                    foreach (var joueur in joueursDisponibles)
+                                                    {
+                                                        <option value="@joueur.Id" selected="@(poste.JoueurId == joueur.Id)">
+                                                            @joueur.Nom - @joueur.Poste
+                                                        </option>
+                                                    }
+                                                }
+                                            </select>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <button type="submit" class="btn btn-primary">Assigner</button>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Lignes du terrain -->
+            <div style="position: absolute; top: 50%; left: 0; right: 0; border-top: 2px solid white;"></div>
+            <div style="position: absolute; top: 20%; left: 50%; width: 40%; height: 60%; border: 2px solid white; transform: translateX(-50%);"></div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <h4>Résumé</h4>
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">@Model.NombreJoueursAssignes/11 joueurs assignés</h5>
+                @if (Model.Match != null)
+                {
+                    <p class="card-text">
+                        Pour le match :<br />
+                        <strong>@Model.Match.Adversaire</strong><br />
+                        @Model.Match.DateHeure.ToString("dd/MM à HH:mm")
+                    </p>
+                }
+            </div>
+        </div>
+
+        <h5>Joueurs assignés</h5>
+        <div class="list-group mb-3" style="max-height: 300px; overflow-y: auto;">
+            @foreach (var poste in Model.PostesTerrain.Where(p => p.JoueurId.HasValue).OrderBy(p => p.PositionY))
+            {
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>@poste.NomPoste</strong><br />
+                            <small>@poste.Joueur?.Nom</small>
+                            <span class="badge bg-secondary ms-1">@poste.Joueur?.Poste</span>
+                        </div>
+                        <form method="post" asp-action="LibererPoste" class="d-inline">
+                            <input type="hidden" name="compositionId" value="@Model.Id" />
+                            <input type="hidden" name="posteTerrainId" value="@poste.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Libérer ce poste">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+            @if (!Model.PostesTerrain.Any(p => p.JoueurId.HasValue))
+            {
+                <div class="alert alert-warning">Aucun joueur assigné. Cliquez sur les cercles pour assigner.</div>
+            }
+        </div>
+
+        <div class="mt-3">
+            <a asp-action="Index" class="btn btn-secondary">Retour à la liste</a>
+            <a asp-action="Visualiser" asp-route-id="@Model.Id" class="btn btn-info">Visualiser</a>
+
+            @if (Model.NombreJoueursAssignes == 11)
+            {
+                <span class="badge bg-success ms-2">Équipe complète ✓</span>
+            }
+            else
+            {
+                <span class="badge bg-warning ms-2">@Model.NombreJoueursAssignes/11</span>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .football-field {
+        background: linear-gradient(to bottom, #4CAF50, #2E7D32);
+        position: relative;
+    }
+
+    .player-position:hover .position-circle {
+        transform: scale(1.1);
+        transition: transform 0.2s;
+        box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+</style>

@@ -1,5 +1,285 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<GestionnaireFootball.Models.Presence>
 @{
+    ViewData["Title"] = "Statistiques des présences";
+    var periode = ViewBag.Periode as string ?? "tout";
+}
+
+<div class="container-fluid">
+    <h1 class="mb-4">
+        <i class="bi bi-bar-chart"></i> @ViewData["Title"]
+    </h1>
+
+    <!-- Filtres -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Période :</label>
+                    <select name="periode" class="form-select">
+                        <option value="mois" selected="@(periode == "mois")">30 derniers jours</option>
+                        <option value="trimestre" selected="@(periode == "trimestre")">3 derniers mois</option>
+                        <option value="semestre" selected="@(periode == "semestre")">6 derniers mois</option>
+                        <option value="annee" selected="@(periode == "annee")">Année en cours</option>
+                        <option value="tout" selected="@(periode == "tout")">Toute période</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Type d'événement :</label>
+                    <select name="typeEvenement" class="form-select">
+                        <option value="">Tous</option>
+                        <option value="Match">Matchs seulement</option>
+                        <option value="Entrainement">Entraînements seulement</option>
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-filter"></i> Appliquer les filtres
+                    </button>
+                    <a href="@Url.Action("Stats")" class="btn btn-outline-secondary ms-2">
+                        <i class="bi bi-x-circle"></i> Réinitialiser
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h2 class="text-primary">@ViewBag.TauxPresenceGlobal%</h2>
+                    <p class="mb-0">Taux de présence global</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <h2 class="text-success">@ViewBag.MoyenneJoueursParEvent</h2>
+                    <p class="mb-0">Moyenne joueurs/événement</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <h2 class="text-warning">@ViewBag.NombreRetards</h2>
+                    <p class="mb-0">Retards totaux</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <h2 class="text-info">@ViewBag.EvenementsTotal</h2>
+                    <p class="mb-0">Événements total</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphiques -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-event"></i> Évolution des présences
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="evolutionChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pie-chart"></i> Répartition des statuts
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statutsChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top joueurs -->
+    @if (ViewBag.TopJoueurs != null)
+    {
+        <div class="card shadow">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="bi bi-trophy"></i> Classement des joueurs
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Joueur</th>
+                                <th>Poste</th>
+                                <th>Présences</th>
+                                <th>Taux</th>
+                                <th>Retards</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int rank = 1;
+                            }
+                            @foreach (var joueur in ViewBag.TopJoueurs)
+                            {
+                                <tr>
+                                    <td>
+                                        @if (rank == 1)
+                                        {
+                                            <span class="badge bg-warning">🥇</span>
+                                        }
+                                        else if (rank == 2)
+                                        {
+                                            <span class="badge bg-secondary">🥈</span>
+                                        }
+                                        else if (rank == 3)
+                                        {
+                                            <span class="badge bg-danger">🥉</span>
+                                        }
+                                        else
+                                        {
+                                            <strong>@rank</strong>
+                                        }
+                                    </td>
+                                    <td>@joueur.Nom</td>
+                                    <td>@joueur.Poste</td>
+                                    <td>@joueur.Presences / @joueur.TotalEvents</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                                <div class="progress-bar @(joueur.Taux >= 80 ? "bg-success" : joueur.Taux >= 60 ? "bg-warning" : "bg-danger")"
+                                                     style="width: @joueur.Taux%">
+                                                </div>
+                                            </div>
+                                            <span>@joueur.Taux%</span>
+                                        </div>
+                                    </td>
+                                    <td>@joueur.Retards</td>
+                                    <td>
+                                        <span class="badge @(joueur.Score >= 80 ? "bg-success" : joueur.Score >= 60 ? "bg-warning" : "bg-danger")">
+                                            @joueur.Score/100
+                                        </span>
+                                    </td>
+                                </tr>
+                                rank++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Analyse par poste -->
+    @if (ViewBag.StatsParPoste != null)
+    {
+        <div class="card shadow mt-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="bi bi-diagram-3"></i> Analyse par poste
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @foreach (var poste in ViewBag.StatsParPoste)
+                    {
+                        <div class="col-md-3 mb-3">
+                            <div class="card border">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">@poste.Poste</h6>
+                                    <h3 class="@(poste.Taux >= 80 ? "text-success" : poste.Taux >= 60 ? "text-warning" : "text-danger")">
+                                        @poste.Taux%
+                                    </h3>
+                                    <p class="text-muted mb-0">
+                                        @poste.Presents présents<br />
+                                        sur @poste.Total joueurs
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Graphique d'évolution
+        const evolutionCtx = document.getElementById('evolutionChart').getContext('2d');
+        new Chart(evolutionCtx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(ViewBag.MoisLabels ?? new List<string>())),
+                datasets: [{
+                    label: 'Taux de présence (%)',
+                    data: @Html.Raw(Json.Serialize(ViewBag.TauxParMois ?? new List<decimal>())),
+                    borderColor: '#4e73df',
+                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Graphique des statuts
+        const statutsCtx = document.getElementById('statutsChart').getContext('2d');
+        new Chart(statutsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Présents', 'Absents', 'Retards', 'Excusés'],
+                datasets: [{
+                    data: [
+                        @ViewBag.NombrePresents,
+                        @ViewBag.NombreAbsents,
+                        @ViewBag.NombreRetards,
+                        @ViewBag.NombreExcuses
+                    ],
+                    backgroundColor: [
+                        '#1cc88a',
+                        '#e74a3b',
+                        '#f6c23e',
+                        '#36b9cc'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    </script>
 }

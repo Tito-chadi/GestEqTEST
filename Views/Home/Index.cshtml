@@ -1,5 +1,147 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@{
+    ViewData["Title"] = "Accueil";
 }
+
+<div class="text-center">
+    <h1 class="display-4 mb-4">⚽ Gestionnaire Football</h1>
+
+    @if (Context.Session.GetString("UserId") == null)
+    {
+        <div class="card mx-auto" style="max-width: 400px;">
+            <div class="card-body">
+                <h5 class="card-title">Bienvenue</h5>
+                <p class="card-text">Connectez-vous pour accéder aux fonctionnalités.</p>
+                <a href="@Url.Action("Login", "Account")" class="btn btn-primary btn-lg w-100">
+                    <i class="bi bi-box-arrow-in-right"></i> Se connecter
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-8">
+                <div class="alert alert-info">
+                    <h5>
+                        <i class="bi bi-person-circle"></i> Bienvenue, @Context.Session.GetString("UserName")
+                        <span class="badge bg-secondary ms-2">@Context.Session.GetString("UserRole")</span>
+                    </h5>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Carte Joueurs -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0"><i class="bi bi-people"></i> Joueurs</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Gérez la liste des joueurs, leurs postes et statistiques.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="@Url.Action("Index", "Joueurs")" class="btn btn-primary w-100">
+                            <i class="bi bi-list"></i> Voir les joueurs
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carte Matchs -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0"><i class="bi bi-calendar-event"></i> Matchs</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Consultez le calendrier et gérez les résultats des matchs.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="@Url.Action("Index", "Matchs")" class="btn btn-success w-100">
+                            <i class="bi bi-calendar-check"></i> Voir le calendrier
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carte Compositions -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-info">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0"><i class="bi bi-diagram-3"></i> Compositions</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Créez et gérez les compositions d'équipe pour les matchs.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="@Url.Action("Index", "Compositions")" class="btn btn-info w-100">
+                            <i class="bi bi-plus-circle"></i> Créer une composition
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pour les entraîneurs et admin seulement -->
+        @if (Context.Session.GetString("UserRole") == "ENTRAINEUR" || Context.Session.GetString("UserRole") == "ADMIN")
+        {
+            <div class="row mt-3">
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-warning">
+                        <div class="card-header bg-warning">
+                            <h5 class="card-title mb-0"><i class="bi bi-clipboard-check"></i> Présences</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Gérez les présences aux entraînements et matchs.</p>
+                        </div>
+                        <div class="card-footer">
+                            <a href="#" class="btn btn-warning w-100">Gérer les présences</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-secondary">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="card-title mb-0"><i class="bi bi-bar-chart"></i> Statistiques</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Consultez les statistiques de l'équipe et des joueurs.</p>
+                        </div>
+                        <div class="card-footer">
+                            <a href="#" class="btn btn-secondary w-100">Voir les stats</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Pour admin seulement -->
+        @if (Context.Session.GetString("UserRole") == "ADMIN")
+        {
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="card-title mb-0"><i class="bi bi-gear"></i> Administration</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <a href="#" class="btn btn-outline-danger w-100">Gérer les utilisateurs</a>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <a href="#" class="btn btn-outline-danger w-100">Configuration</a>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <a href="#" class="btn btn-outline-danger w-100">Sauvegardes</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

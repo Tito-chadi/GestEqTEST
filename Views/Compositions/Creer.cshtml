@@ -1,5 +1,100 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model GestionnaireFootball.Models.Composition
+
 @{
+    ViewData["Title"] = "Nouvelle composition";
+    var matchs = ViewBag.Matchs as List<GestionnaireFootball.Models.Match> ?? new List<GestionnaireFootball.Models.Match>();
 }
+
+<h2>Nouvelle composition</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Creer">
+            <div class="form-group mb-3">
+                <label asp-for="Nom" class="control-label">Nom de la composition</label>
+                <input asp-for="Nom" class="form-control" placeholder="ex: Composition contre Les Voisins" />
+                <span asp-validation-for="Nom" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Formation" class="control-label">Formation</label>
+                <select asp-for="Formation" class="form-control" id="formationSelect">
+                    <option value="4-4-2">4-4-2 (Classique)</option>
+                    <option value="4-3-3">4-3-3 (Offensif)</option>
+                    <option value="3-5-2">3-5-2 (Milieu renforcé)</option>
+                    <option value="5-3-2">5-3-2 (Défensif)</option>
+                    <option value="4-2-3-1">4-2-3-1 (Moderne)</option>
+                </select>
+                <span asp-validation-for="Formation" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="MatchId" class="control-label">Associer à un match (optionnel)</label>
+                <select asp-for="MatchId" class="form-control">
+                    <option value="">-- Aucun match --</option>
+                    @foreach (var match in matchs)
+                    {
+                        <option value="@match.Id">
+                            @match.DateHeure.ToString("dd/MM") vs @match.Adversaire
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group mt-4">
+                <input type="submit" value="Créer et configurer les postes" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Annuler</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-md-6">
+        <h5>Aperçu des formations :</h5>
+        <div class="row">
+            <div class="col-6 mb-2">
+                <strong id="formationName">4-4-2</strong><br />
+                <small id="formationDesc">4 défenseurs, 4 milieux, 2 attaquants</small>
+            </div>
+        </div>
+
+        <!-- Aperçu visuel simple -->
+        <div class="mt-3 p-3 border rounded bg-light">
+            <h6>Schéma :</h6>
+            <div id="formationPreview" class="text-center">
+                <!-- Généré par JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const formations = {
+        '4-4-2': { name: '4-4-2', desc: '4 défenseurs, 4 milieux, 2 attaquants', pattern: [4, 4, 2] },
+        '4-3-3': { name: '4-3-3', desc: '4 défenseurs, 3 milieux, 3 attaquants', pattern: [4, 3, 3] },
+        '3-5-2': { name: '3-5-2', desc: '3 défenseurs, 5 milieux, 2 attaquants', pattern: [3, 5, 2] },
+        '5-3-2': { name: '5-3-2', desc: '5 défenseurs, 3 milieux, 2 attaquants', pattern: [5, 3, 2] },
+        '4-2-3-1': { name: '4-2-3-1', desc: '4 défenseurs, 2 milieux défensifs, 3 milieux offensifs, 1 attaquant', pattern: [4, 2, 3, 1] }
+    };
+
+    function updateFormationPreview() {
+        const select = document.getElementById('formationSelect');
+        const formation = formations[select.value];
+
+        document.getElementById('formationName').textContent = formation.name;
+        document.getElementById('formationDesc').textContent = formation.desc;
+
+        const preview = document.getElementById('formationPreview');
+        let html = '';
+
+        formation.pattern.forEach((num, index) => {
+            const positions = ['Défenseurs', 'Milieux', 'Attaquants', 'Avants'];
+            html += `<div class="mb-1"><strong>${positions[index] || 'Ligne ' + (index + 1)}:</strong> `;
+            html += '○ '.repeat(num) + ` (${num})</div>`;
+        });
+
+        preview.innerHTML = html;
+    }
+
+    document.getElementById('formationSelect').addEventListener('change', updateFormationPreview);
+    document.addEventListener('DOMContentLoaded', updateFormationPreview);
+</script>

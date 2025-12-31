@@ -1,5 +1,243 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model GestionnaireFootball.Models.Notification
 @{
+    ViewData["Title"] = "Nouvelle notification";
+    var matchs = ViewBag.Matchs as List<GestionnaireFootball.Models.Match> ?? new List<GestionnaireFootball.Models.Match>();
+    var joueurs = ViewBag.Joueurs as List<GestionnaireFootball.Models.Joueur> ?? new List<GestionnaireFootball.Models.Joueur>();
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="bi bi-bell-plus"></i> @ViewData["Title"]
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Creer" method="post" id="notificationForm">
+                        <!-- Type -->
+                        <div class="mb-3">
+                            <label asp-for="Type" class="form-label">Type de notification</label>
+                            <select asp-for="Type" class="form-control" required>
+                                <option value="">Sélectionner un type</option>
+                                <option value="Rappel">🔔 Rappel</option>
+                                <option value="Urgent">⚠️ Urgent</option>
+                                <option value="Changement">🔄 Changement</option>
+                                <option value="Félicitations">🏆 Félicitations</option>
+                                <option value="Information">ℹ️ Information</option>
+                                <option value="Avertissement">⚠️ Avertissement</option>
+                            </select>
+                            <span asp-validation-for="Type" class="text-danger"></span>
+                        </div>
+
+                        <!-- Destinataire -->
+                        <div class="mb-3">
+                            <label class="form-label">Destinataire</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="destinataireType" id="destTous" value="tous" checked>
+                                <label class="form-check-label" for="destTous">
+                                    <i class="bi bi-globe"></i> Tous les joueurs
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="destinataireType" id="destSpecifique" value="specifique">
+                                <label class="form-check-label" for="destSpecifique">
+                                    <i class="bi bi-person"></i> Joueur spécifique
+                                </label>
+                            </div>
+
+                            <div id="joueurSelectContainer" class="mt-2" style="display: none;">
+                                <select asp-for="DestinataireId" class="form-control">
+                                    <option value="">Sélectionner un joueur</option>
+                                    @foreach (var joueur in joueurs)
+                                    {
+                                        <option value="@joueur.Id">@joueur.Nom - @joueur.Poste</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Match associé -->
+                        <div class="mb-3">
+                            <label asp-for="MatchId" class="form-label">Associer à un match (optionnel)</label>
+                            <select asp-for="MatchId" class="form-control">
+                                <option value="">Aucun match spécifique</option>
+                                @foreach (var match in matchs)
+                                {
+                                    <option value="@match.Id">
+                                        @match.DateHeure.ToString("dd/MM") vs @match.Adversaire
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Message -->
+                        <div class="mb-3">
+                            <label asp-for="Message" class="form-label">Message</label>
+                            <textarea asp-for="Message" class="form-control" rows="5" placeholder="Entrez le contenu de votre notification..." required></textarea>
+                            <span asp-validation-for="Message" class="text-danger"></span>
+                            <small class="text-muted">Maximum 500 caractères. <span id="charCount">0/500</span></small>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="envoyerMaintenant" checked>
+                                <label class="form-check-label" for="envoyerMaintenant">
+                                    Envoyer immédiatement
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="marquerCommeImportante">
+                                <label class="form-check-label" for="marquerCommeImportante">
+                                    <i class="bi bi-exclamation-triangle"></i> Marquer comme importante
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between">
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Annuler
+                        </a>
+                        <button type="submit" form="notificationForm" class="btn btn-success">
+                            <i class="bi bi-send"></i> Envoyer la notification
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aperçu en temps réel -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-eye"></i> Aperçu</h5>
+                </div>
+                <div class="card-body">
+                    <div id="apercuNotification" class="p-3 border rounded bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span id="apercuType" class="badge bg-secondary">Type</span>
+                            <small id="apercuDate" class="text-muted">@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</small>
+                        </div>
+                        <p id="apercuMessage" class="mb-2">Votre message apparaîtra ici...</p>
+                        <div id="apercuDestinataire" class="small text-muted">
+                            <i class="bi bi-globe"></i> Pour : Tous les joueurs
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modèles prédéfinis -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Modèles rapides</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-outline-primary w-100" onclick="chargerModele('Rappel de match', 'Rappel', 'N\'oubliez pas le match de demain ! Rendez-vous 1h avant le coup d\'envoi.')">
+                                📅 Rappel match
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-outline-warning w-100" onclick="chargerModele('Changement d\'horaire', 'Changement', 'ATTENTION : Changement d\'horaire pour l\'entraînement de ce soir. Nouvel horaire : 19h30.')">
+                                🔄 Changement
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-outline-success w-100" onclick="chargerModele('Félicitations', 'Félicitations', 'Félicitations à toute l\'équipe pour l\'excellente performance de ce week-end ! Continuez comme ça !')">
+                                🏆 Félicitations
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Gestion des destinataires
+        document.querySelectorAll('input[name="destinataireType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const joueurSelect = document.getElementById('joueurSelectContainer');
+                const destinataireSelect = document.getElementById('DestinataireId');
+                const apercuDest = document.getElementById('apercuDestinataire');
+
+                if (this.value === 'specifique') {
+                    joueurSelect.style.display = 'block';
+                    destinataireSelect.required = true;
+                    // Mettre à jour l'aperçu
+                    const selectedJoueur = destinataireSelect.options[destinataireSelect.selectedIndex];
+                    apercuDest.innerHTML = `<i class="bi bi-person"></i> Pour : ${selectedJoueur.text || 'Sélectionner un joueur'}`;
+                } else {
+                    joueurSelect.style.display = 'none';
+                    destinataireSelect.required = false;
+                    apercuDest.innerHTML = '<i class="bi bi-globe"></i> Pour : Tous les joueurs';
+                }
+            });
+        });
+
+        // Mise à jour de l'aperçu en temps réel
+        document.getElementById('Type').addEventListener('change', function() {
+            const typeBadge = document.getElementById('apercuType');
+            const typeColors = {
+                'Rappel': 'warning',
+                'Urgent': 'danger',
+                'Changement': 'info',
+                'Félicitations': 'success',
+                'Information': 'primary',
+                'Avertissement': 'dark'
+            };
+            typeBadge.textContent = this.value || 'Type';
+            typeBadge.className = `badge bg-${typeColors[this.value] || 'secondary'}`;
+        });
+
+        document.getElementById('Message').addEventListener('input', function() {
+            document.getElementById('apercuMessage').textContent = this.value || 'Votre message apparaîtra ici...';
+            // Compteur de caractères
+            const charCount = this.value.length;
+            document.getElementById('charCount').textContent = `${charCount}/500`;
+            if (charCount > 500) {
+                document.getElementById('charCount').className = 'text-danger';
+            } else if (charCount > 450) {
+                document.getElementById('charCount').className = 'text-warning';
+            } else {
+                document.getElementById('charCount').className = 'text-muted';
+            }
+        });
+
+        document.getElementById('DestinataireId').addEventListener('change', function() {
+            const selectedJoueur = this.options[this.selectedIndex];
+            document.getElementById('apercuDestinataire').innerHTML =
+                `<i class="bi bi-person"></i> Pour : ${selectedJoueur.text || 'Sélectionner un joueur'}`;
+        });
+
+        // Charger un modèle prédéfini
+        function chargerModele(titre, type, message) {
+            document.getElementById('Type').value = type;
+            document.getElementById('Message').value = message;
+
+            // Déclencher les événements pour mettre à jour l'aperçu
+            document.getElementById('Type').dispatchEvent(new Event('change'));
+            document.getElementById('Message').dispatchEvent(new Event('input'));
+
+            // Scroll vers le message
+            document.getElementById('Message').focus();
+            document.getElementById('Message').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Validation du formulaire
+        document.getElementById('notificationForm').addEventListener('submit', function(e) {
+            const message = document.getElementById('Message').value;
+            if (message.length > 500) {
+                e.preventDefault();
+                alert('Le message ne peut pas dépasser 500 caractères.');
+                return false;
+            }
+            return true;
+        });
+    </script>
 }

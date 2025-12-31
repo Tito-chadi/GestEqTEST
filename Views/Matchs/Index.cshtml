@@ -1,5 +1,117 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<GestionnaireFootball.Models.Match>
+
 @{
+    ViewData["Title"] = "Calendrier des Matchs";
+}
+
+<h2>Calendrier des Matchs</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Nouveau match
+    </a>
+</p>
+
+<div class="table-responsive">
+    <table class="table table-hover table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Date/Heure</th>
+                <th>Adversaire</th>
+                <th>Lieu</th>
+                <th>Type</th>
+                <th>Score</th>
+                <th>Résultat</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var match in Model.OrderBy(m => m.DateHeure))
+            {
+                <tr>
+                    <td>@match.DateHeure.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        <strong>@match.Adversaire</strong>
+                        @if (match.Compositions?.Any() == true)
+                        {
+                            <br />
+                    
+                            <small class="text-muted">Avec composition</small>
+                        }
+                    </td>
+                    <td>@match.Lieu</td>
+                    <td>
+                        @if (match.EstDomicile == true)
+                        {
+                            <span class="badge bg-primary">🏠 Domicile</span>
+                        }
+                        else if (match.EstDomicile == false)
+                        {
+                            <span class="badge bg-warning">🚗 Extérieur</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Non défini</span>
+                        }
+                    </td>
+                    <td>
+                        @if (match.ButsPour.HasValue && match.ButsContre.HasValue)
+                        {
+                            <span class="fw-bold">@match.ButsPour - @match.ButsContre</span>
+                            @if (!string.IsNullOrEmpty(match.Score))
+                            {
+                                <br />
+                    
+                                <small>(@match.Score)</small>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                    <td>
+                        @if (!match.ButsPour.HasValue || !match.ButsContre.HasValue)
+                        {
+                            <span class="badge bg-secondary">À jouer</span>
+                        }
+                        else
+                        {
+                            var badgeClass = match.Resultat switch
+                            {
+                                "Victoire" => "bg-success",
+                                "Défaite" => "bg-danger",
+                                "Nul" => "bg-warning",
+                                _ => "bg-secondary"
+                            };
+                            <span class="badge @badgeClass">@match.Resultat</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a asp-action="Details" asp-route-id="@match.Id" class="btn btn-info" title="Détails">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a asp-action="Edit" asp-route-id="@match.Id" class="btn btn-warning" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            @if (match.Presences?.Any() != true && match.Compositions?.Any() != true)
+                            {
+                                <a asp-action="Delete" asp-route-id="@match.Id" class="btn btn-danger" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Aucun match programmé pour le moment.
+    </div>
 }

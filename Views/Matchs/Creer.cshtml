@@ -1,5 +1,119 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model GestionnaireFootball.Models.Match
+
 @{
+    ViewData["Title"] = "Créer un match";
+}
+
+<h2><i class="bi bi-calendar-plus"></i> Créer un match</h2>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group mb-3">
+                <label asp-for="DateHeure" class="control-label"></label>
+                <input asp-for="DateHeure" class="form-control" />
+                <span asp-validation-for="DateHeure" class="text-danger"></span>
+                <small class="text-muted">Format: JJ/MM/AAAA HH:mm</small>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Adversaire" class="control-label"></label>
+                <input asp-for="Adversaire" class="form-control" placeholder="Nom de l'équipe adverse" />
+                <span asp-validation-for="Adversaire" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Lieu" class="control-label"></label>
+                <input asp-for="Lieu" class="form-control" placeholder="Stade ou adresse" />
+                <span asp-validation-for="Lieu" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="EstDomicile" class="control-label">Type de match</label>
+                <select asp-for="EstDomicile" class="form-control">
+                    <option value="">-- Sélectionner --</option>
+                    <option value="true">🏠 Domicile</option>
+                    <option value="false">🚗 Extérieur</option>
+                </select>
+                <span asp-validation-for="EstDomicile" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="ButsPour" class="control-label">Buts pour nous</label>
+                        <input asp-for="ButsPour" class="form-control" type="number" min="0" />
+                        <span asp-validation-for="ButsPour" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="ButsContre" class="control-label">Buts contre</label>
+                        <input asp-for="ButsContre" class="form-control" type="number" min="0" />
+                        <span asp-validation-for="ButsContre" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Score" class="control-label">Score (optionnel)</label>
+                <input asp-for="Score" class="form-control" placeholder="Ex: 2-1, 0-0" />
+                <span asp-validation-for="Score" class="text-danger"></span>
+                <small class="text-muted">Format libre pour affichage</small>
+            </div>
+
+            <div class="form-group mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Créer le match
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card bg-light">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle"></i> Informations</h5>
+            </div>
+            <div class="card-body">
+                <p>Après création, vous pourrez :</p>
+                <ul>
+                    <li>Gérer les présences des joueurs</li>
+                    <li>Créer une composition d'équipe pour ce match</li>
+                    <li>Envoyer des notifications aux joueurs</li>
+                    <li>Enregistrer le résultat après le match</li>
+                </ul>
+                <p class="text-muted">
+                    <small>Les scores peuvent être saisis maintenant (match déjà joué) ou plus tard.</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Pré-remplir la date/heure avec maintenant + 7 jours
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            now.setDate(now.getDate() + 7);
+            now.setMinutes(0);
+
+            const dateInput = document.querySelector('input[name="DateHeure"]');
+            if (dateInput && !dateInput.value) {
+                const formattedDate = now.toISOString().slice(0, 16);
+                dateInput.value = formattedDate;
+            }
+        });
+    </script>
 }

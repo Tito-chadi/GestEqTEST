@@ -1,0 +1,12 @@
+﻿@{
+    ViewData["Title"] = "Accès Refusé";
+}
+
+<div class="container mt-5">
+    <div class="alert alert-danger text-center">
+        <h1 class="display-4">⚠️ Accès Refusé</h1>
+        <p class="lead">Vous n'avez pas les permissions nécessaires pour accéder à cette page.</p>
+        <hr>
+        <a href="@Url.Action("Index", "Home")" class="btn btn-primary">Retour à l'accueil</a>
+    </div>
+</div>

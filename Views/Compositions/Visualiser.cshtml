@@ -1,0 +1,215 @@
+﻿@model GestionnaireFootball.ViewModels.CompositionViewModel
+@{
+    ViewData["Title"] = Model.Nom;
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="bi bi-diagram-3"></i> @Model.Nom
+            <small class="text-muted">Formation @Model.Formation</small>
+        </h1>
+        <div>
+            <a href="@Url.Action("Editer", new { id = Model.Id })" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- TERRAIN DE FOOTBALL VISUEL -->
+            <div class="card shadow-lg">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-grid-3x3-gap"></i> Composition sur le terrain</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="football-field-visual" style="position: relative; height: 600px; background: linear-gradient(to bottom, #2e7d32, #1b5e20); border-radius: 8px;">
+                        <!-- Lignes du terrain -->
+                        <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: white; opacity: 0.3;"></div>
+                        <div style="position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: white; opacity: 0.3;"></div>
+                        <div style="position: absolute; top: 20%; bottom: 20%; left: 10%; right: 10%; border: 2px solid white; border-radius: 20px; opacity: 0.3;"></div>
+                        <div style="position: absolute; top: 30%; bottom: 30%; left: 2%; right: 2%; border: 2px solid white; border-radius: 40px; opacity: 0.2;"></div>
+
+                        <!-- Cercles centraux -->
+                        <div style="position: absolute; top: 46%; left: 46%; width: 8%; height: 8%; border: 2px solid white; border-radius: 50%; opacity: 0.3;"></div>
+
+                        <!-- Postes avec joueurs -->
+                        @foreach (var poste in Model.Postes)
+                        {
+                            var hasPlayer = poste.JoueurId.HasValue;
+                            var top = $"{poste.PositionY}%";
+                            var left = $"{poste.PositionX}%";
+
+                            <div class="player-position"
+                                 style="position: absolute; top: @top; left: @left; transform: translate(-50%, -50%);"
+                                 data-toggle="tooltip"
+                                 title="@poste.NomPoste@(hasPlayer ? $" - {poste.JoueurNom}" : "")">
+
+                                <div class="player-circle @(hasPlayer ? "has-player" : "empty-player")"
+                                     style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid @(hasPlayer ? "#0d6efd" : "#6c757d");
+                                                background: @(hasPlayer ? "rgba(13, 110, 253, 0.9)" : "rgba(108, 117, 125, 0.3)");
+                                                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                                                color: white; font-weight: bold; cursor: pointer; transition: all 0.3s;">
+
+                                    @if (hasPlayer)
+                                    {
+                                        <div style="font-size: 16px;">@poste.JoueurNumero</div>
+                                        <div style="font-size: 10px; opacity: 0.8;">@(poste.PosteJoueur?.Substring(0, Math.Min(3, poste.PosteJoueur.Length)))</div>
+                                    }
+                                    else
+                                    {
+                                        <div style="font-size: 20px;">+</div>
+                                        <div style="font-size: 9px;">@poste.NomPoste.Split(' ').Last()</div>
+                                    }
+                                </div>
+
+                                <div style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%);
+                                                white-space: nowrap; font-size: 11px; color: white; background: rgba(0,0,0,0.7);
+                                                padding: 2px 6px; border-radius: 3px;">
+                                    @poste.NomPoste
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- INFORMATIONS ET STATS -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informations</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-5">Formation:</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge bg-success fs-6">@Model.Formation</span>
+                            <a href="@Url.Action("ChangerFormation", new { formationActuelle = Model.Formation })"
+                               class="btn btn-sm btn-outline-primary ms-2">
+                                <i class="bi bi-arrow-repeat"></i> Changer
+                            </a>
+                        </dd>
+
+                        <dt class="col-sm-5">Joueurs assignés:</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge @(Model.Postes.Count(p => p.JoueurId.HasValue) == 11 ? "bg-success" : "bg-warning")">
+                                @Model.Postes.Count(p => p.JoueurId.HasValue)/11
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-5">Postes vides:</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge bg-danger">@Model.Postes.Count(p => !p.JoueurId.HasValue)</span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- LISTE DES JOUEURS -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-people-fill"></i> Joueurs sur le terrain</h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    @if (Model.Postes.Any(p => p.JoueurId.HasValue))
+                    {
+                        <div class="list-group">
+                            @foreach (var poste in Model.Postes.Where(p => p.JoueurId.HasValue).OrderBy(p => p.NomPoste))
+                            {
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold">#@poste.JoueurNumero - @poste.JoueurNom</div>
+                                        <small class="text-muted">@poste.NomPoste • @poste.PosteJoueur</small>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">@poste.PosteJoueur</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> Aucun joueur n'a encore été assigné à cette composition.
+                        </div>
+                    }
+                </div>
+                <div class="card-footer">
+                    <a href="@Url.Action("Editer", new { id = Model.Id })" class="btn btn-sm btn-outline-success w-100">
+                        <i class="bi bi-person-plus"></i> Assigner des joueurs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LEGENDE -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h6><i class="bi bi-legend"></i> Légende :</h6>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 20px; height: 20px; border-radius: 50%; background: #0d6efd; margin-right: 8px;"></div>
+                            <span>Joueur assigné</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div style="width: 20px; height: 20px; border-radius: 50%; background: #6c757d; margin-right: 8px;"></div>
+                            <span>Poste vacant</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div style="width: 20px; height: 20px; border-radius: 50%; background: #198754; margin-right: 8px;"></div>
+                            <span>Formation @Model.Formation</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            // Initialiser les tooltips
+            $('[data-toggle="tooltip"]').tooltip();
+
+            // Animation des cercles joueurs
+            $('.player-circle').hover(
+                function() {
+                    $(this).css('transform', 'scale(1.1)');
+                },
+                function() {
+                    $(this).css('transform', 'scale(1)');
+                }
+            );
+        });
+    </script>
+
+    <style>
+        .player-circle {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+            .player-circle.has-player:hover {
+                box-shadow: 0 6px 12px rgba(13, 110, 253, 0.4);
+                border-color: #0dcaf0 !important;
+            }
+
+            .player-circle.empty-player:hover {
+                box-shadow: 0 6px 12px rgba(108, 117, 125, 0.4);
+                border-color: #adb5bd !important;
+            }
+
+        .football-field-visual {
+            background-image: radial-gradient(circle at 50% 50%, transparent 30%, rgba(255,255,255,0.05) 30%), linear-gradient(90deg, transparent 49%, rgba(255,255,255,0.1) 49%, rgba(255,255,255,0.1) 51%, transparent 51%), linear-gradient(0deg, transparent 49%, rgba(255,255,255,0.1) 49%, rgba(255,255,255,0.1) 51%, transparent 51%);
+        }
+    </style>
+}

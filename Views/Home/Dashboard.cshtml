@@ -1,0 +1,366 @@
+﻿@{
+    ViewData["Title"] = "Tableau de bord";
+    var userRole = Context.Session.GetString("UserRole");
+}
+
+<div class="container-fluid">
+    <!-- En-tête avec stats -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="display-6">
+                    <i class="bi bi-speedometer2"></i> Tableau de bord
+                    <small class="text-muted fs-6">@DateTime.Now.ToString("dddd dd MMMM yyyy")</small>
+                </h1>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-filter"></i> Filtres
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">Aujourd'hui</a></li>
+                        <li><a class="dropdown-item" href="#">Cette semaine</a></li>
+                        <li><a class="dropdown-item" href="#">Ce mois</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cartes de statistiques -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-primary border-4 shadow h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">
+                                Joueurs actifs
+                            </div>
+                            <div class="h5 mb-0 fw-bold" id="joueursCount">0</div>
+                            <div class="mt-2">
+                                <span class="text-success small">
+                                    <i class="bi bi-arrow-up"></i> 12%
+                                </span>
+                                <span class="text-muted small"> vs mois dernier</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-people fs-1 text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="@Url.Action("Index", "Joueurs")" class="small text-decoration-none">
+                        Voir tous les joueurs <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-success border-4 shadow h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">
+                                Matchs ce mois
+                            </div>
+                            <div class="h5 mb-0 fw-bold" id="matchsCount">0</div>
+                            <div class="mt-2">
+                                <span class="text-success small">
+                                    <i class="bi bi-calendar-check"></i> Prochain
+                                </span>
+                                <span class="text-muted small" id="prochainMatchDate">Aucun</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-calendar-event fs-1 text-success"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="@Url.Action("Calendrier", "Matchs")" class="small text-decoration-none">
+                        Voir calendrier <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-warning border-4 shadow h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">
+                                Présence moyenne
+                            </div>
+                            <div class="h5 mb-0 fw-bold" id="presenceMoyenne">0%</div>
+                            <div class="mt-2">
+                                <span class="text-success small">
+                                    <i class="bi bi-check-circle"></i>
+                                </span>
+                                <span class="text-muted small">Taux de participation</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-clipboard-check fs-1 text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="@Url.Action("Index", "Presences")" class="small text-decoration-none">
+                        Voir présences <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-info border-4 shadow h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">
+                                Notifications
+                            </div>
+                            <div class="h5 mb-0 fw-bold" id="notificationsCount">0</div>
+                            <div class="mt-2">
+                                <span class="text-danger small">
+                                    <i class="bi bi-bell"></i>
+                                </span>
+                                <span class="text-muted small" id="nonLuesCount">0 non lues</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-bell fs-1 text-info"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="@Url.Action("Index", "Notifications")" class="small text-decoration-none">
+                        Voir notifications <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deux colonnes principales -->
+    <div class="row">
+        <!-- Colonne gauche : Prochains matchs et joueurs -->
+        <div class="col-lg-8">
+            <!-- Prochains matchs -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold">
+                        <i class="bi bi-calendar-week"></i> Prochains matchs
+                    </h6>
+                    <a href="@Url.Action("Creer", "Matchs")" class="btn btn-sm btn-light">
+                        <i class="bi bi-plus-circle"></i> Nouveau
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div id="prochainsMatchs">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Joueurs récents -->
+            <div class="card shadow">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold">
+                        <i class="bi bi-people-fill"></i> Derniers joueurs ajoutés
+                    </h6>
+                    <a href="@Url.Action("Creer", "Joueurs")" class="btn btn-sm btn-light">
+                        <i class="bi bi-person-plus"></i> Ajouter
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div id="joueursRecents">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne droite : Actions rapides et stats -->
+        <div class="col-lg-4">
+            <!-- Actions rapides -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="m-0 fw-bold">
+                        <i class="bi bi-lightning"></i> Actions rapides
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        @if (userRole == "ADMIN" || userRole == "ENTRAINEUR")
+                        {
+                            <a href="@Url.Action("Creer", "Matchs")" class="btn btn-outline-primary text-start">
+                                <i class="bi bi-calendar-plus"></i> Planifier un match
+                            </a>
+                            <a href="@Url.Action("Creer", "Compositions")" class="btn btn-outline-success text-start">
+                                <i class="bi bi-diagram-3"></i> Créer une composition
+                            </a>
+                            <a href="@Url.Action("Creer", "Notifications")" class="btn btn-outline-warning text-start">
+                                <i class="bi bi-bell"></i> Envoyer notification
+                            </a>
+                            <a href="@Url.Action("Index", "Presences")" class="btn btn-outline-info text-start">
+                                <i class="bi bi-clipboard-check"></i> Prendre les présences
+                            </a>
+                        }
+                        <a href="@Url.Action("MesNotifications", "Notifications")" class="btn btn-outline-secondary text-start">
+                            <i class="bi bi-envelope"></i> Voir mes messages
+                        </a>
+                        <a href="@Url.Action("MonEspace", "Home")" class="btn btn-outline-dark text-start">
+                            <i class="bi bi-person-circle"></i> Mon profil
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats rapides par poste -->
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h6 class="m-0 fw-bold">
+                        <i class="bi bi-pie-chart"></i> Joueurs par poste
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="statsParPoste">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-info" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Charger les données du dashboard
+            loadDashboardData();
+
+            // Actualiser toutes les 60 secondes
+            setInterval(loadDashboardData, 60000);
+        });
+
+        function loadDashboardData() {
+            // Charger les statistiques
+            $.get('@Url.Action("GetDashboardStats", "Home")', function(data) {
+                if (data.success) {
+                    $('#joueursCount').text(data.joueursCount);
+                    $('#matchsCount').text(data.matchsCount);
+                    $('#presenceMoyenne').text(data.presenceMoyenne + '%');
+                    $('#notificationsCount').text(data.notificationsCount);
+                    $('#nonLuesCount').text(data.notificationsNonLues + ' non lues');
+
+                    if (data.prochainMatch) {
+                        $('#prochainMatchDate').text(data.prochainMatch.adversaire + ' - ' +
+                            new Date(data.prochainMatch.dateHeure).toLocaleDateString());
+                    }
+                }
+            });
+
+            // Charger les prochains matchs
+            $.get('@Url.Action("GetProchainsMatchs", "Home")', function(data) {
+                const container = $('#prochainsMatchs');
+                if (data.success && data.matchs.length > 0) {
+                    let html = '<div class="list-group list-group-flush">';
+                    data.matchs.forEach(match => {
+                        const date = new Date(match.dateHeure);
+                        html += `
+                            <a href="@Url.Action("Details", "Matchs")/${match.id}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">${match.adversaire}</h6>
+                                    <small class="text-muted">${date.toLocaleDateString()}</small>
+                                </div>
+                                <p class="mb-1">
+                                    <i class="bi bi-geo-alt"></i> ${match.lieu}
+                                    <span class="badge ${match.estDomicile ? 'bg-primary' : 'bg-warning'} ms-2">
+                                        ${match.estDomicile ? 'Domicile' : 'Extérieur'}
+                                    </span>
+                                </p>
+                                <small class="text-muted">
+                                    <i class="bi bi-clock"></i> ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                </small>
+                            </a>
+                        `;
+                    });
+                    html += '</div>';
+                    container.html(html);
+                } else {
+                    container.html('<div class="alert alert-info text-center">Aucun match à venir</div>');
+                }
+            });
+
+            // Charger les joueurs récents
+            $.get('@Url.Action("GetJoueursRecents", "Home")', function(data) {
+                const container = $('#joueursRecents');
+                if (data.success && data.joueurs.length > 0) {
+                    let html = '<div class="table-responsive"><table class="table table-hover">';
+                    html += '<thead><tr><th>Nom</th><th>Poste</th><th>Numéro</th><th>Note</th></tr></thead><tbody>';
+                    data.joueurs.forEach(joueur => {
+                        html += `
+                            <tr onclick="window.location='@Url.Action("Details", "Joueurs")/${joueur.id}'" style="cursor: pointer;">
+                                <td>${joueur.nomComplet}</td>
+                                <td><span class="badge bg-info">${joueur.poste}</span></td>
+                                <td>${joueur.numeroMaillot || '-'}</td>
+                                <td>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-success" style="width: ${joueur.noteGlobale * 10}%"></div>
+                                    </div>
+                                    <small>${joueur.noteGlobale}/10</small>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    html += '</tbody></table></div>';
+                    container.html(html);
+                } else {
+                    container.html('<div class="alert alert-info text-center">Aucun joueur enregistré</div>');
+                }
+            });
+
+            // Charger les stats par poste
+            $.get('@Url.Action("GetStatsParPoste", "Home")', function(data) {
+                const container = $('#statsParPoste');
+                if (data.success) {
+                    let html = '<div class="row">';
+                    for (const [poste, count] of Object.entries(data.stats)) {
+                        const pourcentage = (count / data.total) * 100;
+                        html += `
+                            <div class="col-6 mb-3">
+                                <div class="small text-muted">${poste}</div>
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-grow-1 me-2">
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar" style="width: ${pourcentage}%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="fw-bold">${count}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    html += '</div>';
+                    container.html(html);
+                }
+            });
+        }
+    </script>
+}
